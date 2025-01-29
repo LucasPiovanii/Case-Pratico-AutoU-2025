@@ -27,6 +27,18 @@
             color: #333;
             margin-bottom: 20px;
         }
+        .classification {
+            font-size: 1.5em;
+            color: #007BFF;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .produtivo {
+            color: green;
+        }
+        .improdutivo {
+            color: red;
+        }
         a {
             text-decoration: none;
             color: #007BFF;
@@ -36,6 +48,9 @@
 <body>
     <div class="container">
         <p class="result">{{ result }}</p>
+        <p class="classification {% if classification == 'Produtivo' %}produtivo{% else %}improdutivo{% endif %}">
+            Classificação: {{ classification }}
+        </p>
         <a href="/">Voltar para o início</a>
     </div>
 </body>

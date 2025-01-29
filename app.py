@@ -4,9 +4,13 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
+from transformers import pipeline
 import os
 
 app = Flask(__name__)
+
+# Carregar o pipeline de classificação de texto do Hugging Face
+classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 
 # Função para extrair texto de PDFs
 def extract_text_from_pdf(file):
@@ -26,6 +30,11 @@ def preprocess_text(text):
     
     return " ".join(tokens)
 
+def classify_text(text):
+    labels = ["Produtivo", "Improdutivo"]  # Defina os rótulos que você deseja
+    result = classifier(text, candidate_labels=labels)
+    return result["labels"][0]  # Retorna o rótulo com maior probabilidade
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -40,13 +49,15 @@ def process():
     
     if user_text:
         processed_text = preprocess_text(user_text)
-        result = f"Texto processado: {processed_text}"
+        classification = classify_text(processed_text)
+        result = f"Texto processado: {processed_text}\nClassificação: {classification}"
     
     elif file:
         if file.filename.endswith(".txt"):
             file_content = file.read().decode("utf-8")
             processed_text = preprocess_text(file_content)
-            result = f"Arquivo .txt processado: {processed_text}"
+            classification = classify_text(processed_text)
+            result = f"Arquivo .txt processado: {processed_text}\nClassificação: {classification}"
         
         elif file.filename.endswith(".pdf"):
             extracted_text = extract_text_from_pdf(file)
@@ -54,7 +65,8 @@ def process():
                 return render_template("index.html", error="Não foi possível extrair texto do PDF.")
             
             processed_text = preprocess_text(extracted_text)
-            result = f"Arquivo PDF processado: {processed_text}"
+            classification = classify_text(processed_text)
+            result = f"Arquivo PDF processado: {processed_text}\nClassificação: {classification}"
         
         else:
             return render_template("index.html", error="Formato de arquivo não suportado.")
@@ -62,7 +74,8 @@ def process():
     else:
         return render_template("index.html", error="Nenhum texto ou arquivo foi enviado.")
     
-    return render_template("result.html", result=result)
+    # Passando a classificação para o template
+    return render_template("result.html", result=result, classification=classification)
 
 if __name__ == "__main__":
     app.run(debug=True)
