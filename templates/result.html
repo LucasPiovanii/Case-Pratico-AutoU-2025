@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado</title>
+    <link rel="stylesheet" href="/static/result.css">
+</head>
+<body>
+    <div class="container">
+        <p class="result">{{ result }}</p>
+        <p class="classification {% if classification == 'Produtivo' %}produtivo{% else %}improdutivo{% endif %}">
+            Classificação: {{ classification }}
+        </p>
+        <div class="response">
+            <strong>Resposta sugerida:</strong>
+            <p>{{ response }}</p>
+        </div>
+        <a href="/">Voltar para o início</a>
+    </div>
+</body>
+</html>
