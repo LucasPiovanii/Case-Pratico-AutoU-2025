@@ -53,7 +53,7 @@ As dependências incluem:
 Por fim, vá até o site do Google AI Studio (https://aistudio.google.com/u/2/apikey?pli=1), crie sua API-KEY e a insira na linha 12 do arquivo app.py.
 
 ```bash
-genai.configure(api_key="SUA-API-KEY")
+genai.configure(api_key="GOOGLE_GEMINI_API_KEY")
 ```
 
 ### 4. Execução da Aplicação

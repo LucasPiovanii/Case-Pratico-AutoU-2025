@@ -9,7 +9,7 @@ import google.generativeai as genai
 app = Flask(__name__)
 
 # Configurar a API do Google Gemini
-genai.configure(api_key="SUA_API_KEY")
+genai.configure(api_key="GOOGLE_GEMINI_API_KEY")
 
 # Função para extrair texto de PDFs com PyMuPDF
 def extract_text_from_pdf(file):
