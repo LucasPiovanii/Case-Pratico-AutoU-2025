@@ -4,13 +4,12 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
-from transformers import pipeline
-import os
+import google.generativeai as genai
 
 app = Flask(__name__)
 
-# Carregar o pipeline de classificação de texto do Hugging Face
-classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+# Configurar a API do Google Gemini
+genai.configure(api_key="AIzaSyBXD6tM44Oir53A25y4_BiIqAGf9OIfc5M")
 
 # Função para extrair texto de PDFs
 def extract_text_from_pdf(file):
@@ -22,18 +21,47 @@ def extract_text_from_pdf(file):
 
 # Função de pré-processamento de NLP
 def preprocess_text(text):
-    stop_words = set(stopwords.words("portuguese"))  # Usar stopwords em português
+    nltk.download("stopwords")
+    nltk.download("punkt")
+    nltk.download("wordnet")
+
+    stop_words = set(stopwords.words("portuguese"))  # Stopwords em português
     lemmatizer = WordNetLemmatizer()
     
-    tokens = word_tokenize(text.lower())  # Tokeniza e coloca tudo em minúsculo
+    tokens = word_tokenize(text.lower())  # Tokeniza e coloca em minúsculo
     tokens = [lemmatizer.lemmatize(word) for word in tokens if word.isalnum() and word not in stop_words]
     
     return " ".join(tokens)
 
-def classify_text(text):
-    labels = ["Produtivo", "Improdutivo"]  # Defina os rótulos que você deseja
-    result = classifier(text, candidate_labels=labels)
-    return result["labels"][0]  # Retorna o rótulo com maior probabilidade
+# Função para classificar o texto usando Google Gemini
+def classify_text_with_gemini(text):
+    model = genai.GenerativeModel("gemini-pro")
+    
+    prompt = f"""
+    Você é um assistente que classifica emails e mensagens como 'Produtivo' ou 'Improdutivo'.
+    
+    - **Produtivo:** Mensagens que requerem uma ação ou resposta específica. Exemplos:
+      - Solicitação de suporte técnico.
+      - Atualização sobre um caso em aberto.
+      - Dúvidas sobre o sistema ou processos internos.
+      - Pedidos que necessitam de uma resposta clara.
+
+    - **Improdutivo:** Mensagens que não exigem ação imediata. Exemplos:
+      - Felicitações, parabéns, saudações.
+      - Agradecimentos simples que não exigem resposta.
+      - Mensagens informativas sem necessidade de ação.
+
+    Leia a seguinte mensagem e classifique-a como **'Produtivo'** ou **'Improdutivo'**:
+
+    --- 
+    {text}
+    ---
+
+    Responda apenas com 'Produtivo' ou 'Improdutivo'.
+    """
+    
+    response = model.generate_content(prompt)
+    return response.text.strip()  # Retorna somente o rótulo
 
 @app.route("/")
 def index():
@@ -49,14 +77,14 @@ def process():
     
     if user_text:
         processed_text = preprocess_text(user_text)
-        classification = classify_text(processed_text)
+        classification = classify_text_with_gemini(processed_text)
         result = f"Texto processado: {processed_text}\nClassificação: {classification}"
     
     elif file:
         if file.filename.endswith(".txt"):
             file_content = file.read().decode("utf-8")
             processed_text = preprocess_text(file_content)
-            classification = classify_text(processed_text)
+            classification = classify_text_with_gemini(processed_text)
             result = f"Arquivo .txt processado: {processed_text}\nClassificação: {classification}"
         
         elif file.filename.endswith(".pdf"):
@@ -65,7 +93,7 @@ def process():
                 return render_template("index.html", error="Não foi possível extrair texto do PDF.")
             
             processed_text = preprocess_text(extracted_text)
-            classification = classify_text(processed_text)
+            classification = classify_text_with_gemini(processed_text)
             result = f"Arquivo PDF processado: {processed_text}\nClassificação: {classification}"
         
         else:
@@ -74,7 +102,6 @@ def process():
     else:
         return render_template("index.html", error="Nenhum texto ou arquivo foi enviado.")
     
-    # Passando a classificação para o template
     return render_template("result.html", result=result, classification=classification)
 
 if __name__ == "__main__":
