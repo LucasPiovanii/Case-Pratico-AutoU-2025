@@ -5,11 +5,13 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 import google.generativeai as genai
+import os
 
 app = Flask(__name__)
 
 # Configurar a API do Google Gemini
-genai.configure(api_key="GOOGLE_GEMINI_API_KEY")
+api_key = os.getenv("GOOGLE_GEMINI_API_KEY")
+genai.configure(api_key=api_key)
 
 # Função para extrair texto de PDFs com PyMuPDF
 def extract_text_from_pdf(file):
