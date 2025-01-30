@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-import fitz # PyMuPDF para leitura de PDFs
+import fitz # PyMuPDF
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -9,9 +9,9 @@ import google.generativeai as genai
 app = Flask(__name__)
 
 # Configurar a API do Google Gemini
-genai.configure(api_key="AIzaSyBXD6tM44Oir53A25y4_BiIqAGf9OIfc5M")
+genai.configure(api_key="SUA_API_KEY")
 
-# Função para extrair texto de PDFs
+# Função para extrair texto de PDFs com PyMuPDF
 def extract_text_from_pdf(file):
     doc = fitz.open(stream=file.read(), filetype="pdf") # Lê o arquivo diretamente do stream
     text = ""
@@ -21,9 +21,9 @@ def extract_text_from_pdf(file):
 
 # Função de pré-processamento de NLP
 def preprocess_text(text):
-    nltk.download("stopwords")
-    nltk.download("punkt")
-    nltk.download("wordnet")
+    nltk.download("stopwords") # Para stop words
+    nltk.download("punkt") # Para tokenização
+    nltk.download("wordnet") # Para lematização
 
     stop_words = set(stopwords.words("portuguese")) # Stopwords em português
     lemmatizer = WordNetLemmatizer()
@@ -125,7 +125,6 @@ def process():
     else:
         return render_template("index.html", error="Nenhum texto ou arquivo foi enviado.")
     
-    # Passando a classificação e a resposta para o template
     return render_template("result.html", result=result, classification=classification, response=response)
 
 if __name__ == "__main__":

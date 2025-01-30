@@ -1,61 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Classificador de Emails</title>
-  <link rel="stylesheet" href="/static/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classificador de Emails</title>
+    <link rel="stylesheet" href="/static/index.css">
 </head>
 <body>
-  <div class="container">
-    <h2>Classificador de Emails</h2>
-    <textarea id="emailText" rows="5" placeholder="Insira o texto do email"></textarea>
-    <input type="file" id="emailFile" accept=".txt, .pdf">
-    <button id="submitBtn">Enviar</button>
-    <p id="errorMsg" class="error"></p>
-  </div>
-  <script>
-    const submitBtn = document.getElementById('submitBtn');
-    const emailText = document.getElementById('emailText');
-    const emailFile = document.getElementById('emailFile');
-    const errorMsg = document.getElementById('errorMsg');
-  
-    submitBtn.addEventListener('click', () => {
-      errorMsg.textContent = ''; // Limpa mensagens de erro anteriores
-  
-      // Verifica se ambos texto e arquivo foram enviados
-      if (emailText.value.trim() && emailFile.files.length > 0) {
-        errorMsg.textContent = 'Por favor, envie apenas texto ou um arquivo, não ambos.';
-        return;
-      }
-  
-      // Verifica se nenhum dado foi enviado
-      if (!emailText.value.trim() && emailFile.files.length === 0) {
-        errorMsg.textContent = 'Por favor, envie um texto ou selecione um arquivo.';
-        return;
-      }
-  
-      const formData = new FormData();
-      if (emailText.value.trim()) {
-        formData.append('text_input', emailText.value.trim());
-      }
-      if (emailFile.files.length > 0) {
-        formData.append('file_input', emailFile.files[0]);
-      }
-  
-      // Envia os dados ao backend
-      fetch('/process', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.text())
-      .then(data => {
-        document.open();
-        document.write(data);
-        document.close();
-      })
-      .catch(error => console.error('Erro:', error));
-    });
-  </script>
+    <div class="container">
+        <h2>Classificador de Emails</h2>
+        <textarea id="emailText" rows="5" placeholder="Insira o texto do email"></textarea>
+        <input type="file" id="emailFile" accept=".txt, .pdf">
+        <button id="submitBtn">Enviar</button>
+        <p id="errorMsg" class="error"></p>
+    </div>
+    <script>
+        const submitBtn = document.getElementById('submitBtn');
+        const emailText = document.getElementById('emailText');
+        const emailFile = document.getElementById('emailFile');
+        const errorMsg = document.getElementById('errorMsg');
+    
+        submitBtn.addEventListener('click', () => {
+        errorMsg.textContent = ''; // Limpa mensagens de erro anteriores
+    
+        // Verifica se ambos texto e arquivo foram enviados
+        if (emailText.value.trim() && emailFile.files.length > 0) {
+            errorMsg.textContent = 'Por favor, envie apenas texto ou um arquivo, não ambos.';
+            return;
+        }
+    
+        // Verifica se nenhum dado foi enviado
+        if (!emailText.value.trim() && emailFile.files.length === 0) {
+            errorMsg.textContent = 'Por favor, envie um texto ou selecione um arquivo.';
+            return;
+        }
+    
+        const formData = new FormData();
+        if (emailText.value.trim()) {
+            formData.append('text_input', emailText.value.trim());
+        }
+        if (emailFile.files.length > 0) {
+            formData.append('file_input', emailFile.files[0]);
+        }
+    
+        // Envia os dados ao backend
+        fetch('/process', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+            document.open();
+            document.write(data);
+            document.close();
+        })
+        .catch(error => console.error('Erro:', error));
+        });
+    </script>
 </body>
 </html>
