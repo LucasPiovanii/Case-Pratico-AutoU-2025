@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-import fitz  # PyMuPDF para leitura de PDFs
+import fitz # PyMuPDF para leitura de PDFs
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -13,7 +13,7 @@ genai.configure(api_key="AIzaSyBXD6tM44Oir53A25y4_BiIqAGf9OIfc5M")
 
 # Função para extrair texto de PDFs
 def extract_text_from_pdf(file):
-    doc = fitz.open(stream=file.read(), filetype="pdf")  # Lê o arquivo diretamente do stream
+    doc = fitz.open(stream=file.read(), filetype="pdf") # Lê o arquivo diretamente do stream
     text = ""
     for page in doc:
         text += page.get_text("text") + "\n"
@@ -25,10 +25,10 @@ def preprocess_text(text):
     nltk.download("punkt")
     nltk.download("wordnet")
 
-    stop_words = set(stopwords.words("portuguese"))  # Stopwords em português
+    stop_words = set(stopwords.words("portuguese")) # Stopwords em português
     lemmatizer = WordNetLemmatizer()
     
-    tokens = word_tokenize(text.lower())  # Tokeniza e coloca em minúsculo
+    tokens = word_tokenize(text.lower()) # Tokeniza e coloca em minúsculo
     tokens = [lemmatizer.lemmatize(word) for word in tokens if word.isalnum() and word not in stop_words]
     
     return " ".join(tokens)
@@ -61,7 +61,27 @@ def classify_text_with_gemini(text):
     """
     
     response = model.generate_content(prompt)
-    return response.text.strip()  # Retorna somente o rótulo
+    return response.text.strip()
+
+def generate_response_with_gemini(text, classification):
+    model = genai.GenerativeModel("gemini-pro")
+
+    prompt = f"""
+    Você é um assistente que gera respostas automáticas para emails e mensagens.
+
+    - **Se a mensagem for 'Produtivo'**, gere uma resposta clara, educada e objetiva, ajudando o remetente com o que for necessário.
+    - **Se a mensagem for 'Improdutivo'**, responda de forma educada, mas breve, evitando prolongar a conversa sem necessidade.
+
+    **Mensagem recebida:**  
+    {text}
+
+    **Classificação:** {classification}
+
+    Gere uma resposta adequada para essa mensagem.
+    """
+
+    response = model.generate_content(prompt)
+    return response.text.strip()
 
 @app.route("/")
 def index():
@@ -78,14 +98,16 @@ def process():
     if user_text:
         processed_text = preprocess_text(user_text)
         classification = classify_text_with_gemini(processed_text)
-        result = f"Texto processado: {processed_text}\nClassificação: {classification}"
+        response = generate_response_with_gemini(processed_text, classification)
+        result = f"Texto processado: {processed_text}"
     
     elif file:
         if file.filename.endswith(".txt"):
             file_content = file.read().decode("utf-8")
             processed_text = preprocess_text(file_content)
             classification = classify_text_with_gemini(processed_text)
-            result = f"Arquivo .txt processado: {processed_text}\nClassificação: {classification}"
+            response = generate_response_with_gemini(processed_text, classification)
+            result = f"Arquivo .txt processado: {processed_text}"
         
         elif file.filename.endswith(".pdf"):
             extracted_text = extract_text_from_pdf(file)
@@ -94,7 +116,8 @@ def process():
             
             processed_text = preprocess_text(extracted_text)
             classification = classify_text_with_gemini(processed_text)
-            result = f"Arquivo PDF processado: {processed_text}\nClassificação: {classification}"
+            response = generate_response_with_gemini(processed_text, classification)
+            result = f"Arquivo PDF processado: {processed_text}"
         
         else:
             return render_template("index.html", error="Formato de arquivo não suportado.")
@@ -102,7 +125,8 @@ def process():
     else:
         return render_template("index.html", error="Nenhum texto ou arquivo foi enviado.")
     
-    return render_template("result.html", result=result, classification=classification)
+    # Passando a classificação e a resposta para o template
+    return render_template("result.html", result=result, classification=classification, response=response)
 
 if __name__ == "__main__":
     app.run(debug=True)
